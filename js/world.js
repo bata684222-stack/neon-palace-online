@@ -69,9 +69,10 @@
       const carpet = Utils.carpetTexture();
       carpet.repeat.set(4, 4);
 
-      M.floor = new THREE.MeshStandardMaterial({ map: floorTex, color: 0xc2ccdd, roughness: .45, metalness: .35 });
-      M.carpet = new THREE.MeshStandardMaterial({ map: carpet, roughness: .95, metalness: 0 });
-      M.wall = new THREE.MeshStandardMaterial({ color: 0x232b3f, roughness: .8, metalness: .15 });
+      M.floor = new THREE.MeshStandardMaterial({ map: floorTex, color: 0xe8eefc, roughness: .28, metalness: .42 });
+      M.carpet = new THREE.MeshStandardMaterial({ map: carpet, roughness: .88, metalness: 0.04 });
+      const wallTex=Utils.wallTexture(); wallTex.repeat.set(3,1);
+      M.wall = new THREE.MeshStandardMaterial({ map: wallTex, color: 0xE8EEFC, roughness: .72, metalness: .12 });
       M.wallDark = new THREE.MeshStandardMaterial({ color: 0x0d111c, roughness: .9 });
       M.ceiling = new THREE.MeshStandardMaterial({ color: 0x090c14, roughness: .95 });
       M.metal = new THREE.MeshStandardMaterial({ color: 0x39415a, roughness: .3, metalness: .9 });

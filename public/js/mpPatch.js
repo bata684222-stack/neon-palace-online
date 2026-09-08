@@ -5,6 +5,21 @@
   'use strict';
 
   function isOnline(){ return window.Network && Network.isOnline(); }
+  function shakeCoins(kind){
+    const el=document.getElementById('hud-coins') || document.getElementById('panel-coins');
+    if(!el) return;
+    el.classList.remove('shake','win-pulse');
+    void el.offsetWidth;
+    el.classList.add(kind==='win'?'win-pulse':'shake');
+    setTimeout(()=> el.classList.remove('shake','win-pulse'), 600);
+  }
+  function optimisticSpend(bet){
+    if(!isOnline() || !bet) return;
+    State.coins=Math.max(0, (State.coins||0) - bet);
+    UI.refreshHUD();
+    shakeCoins('spend');
+    Sound.play('bet');
+  }
 
   // ---- ROULETTE ----
   if(window.Roulette){
@@ -64,6 +79,7 @@
         };
         requestAnimationFrame(animate);
       };
+      optimisticSpend(total);
       Bus.on('game:result_multi', pending);
       setTimeout(()=>{ if(Roulette.spinning){ Bus.off('game:result_multi', pending); Roulette.spinning=false; Utils.safe(body,'#rl-spin').disabled=false; const r=Utils.safe(body,'#rl-result'); r.className='result lose'; r.textContent='Server timeout'; Sound.play('deny'); } },6000);
       Network.playRoulette(bets);
@@ -107,6 +123,7 @@
         this.rolling=false;
         UI.refreshHUD();
       };
+      optimisticSpend(bet);
       Bus.on('game:result_multi', pending);
       setTimeout(()=>{ if(this.rolling){ Bus.off('game:result_multi', pending); clearInterval(flick); this.rolling=false; Utils.safe(body,'#dc-roll').disabled=false; resEl.className='result lose'; resEl.textContent='Server timeout'; } },6000);
       Network.playDice(choice, bet);
@@ -155,6 +172,7 @@
         };
         requestAnimationFrame(anim);
       };
+      optimisticSpend(bet);
       Bus.on('game:result_multi', pending);
       setTimeout(()=>{ if(this.flipping){ Bus.off('game:result_multi', pending); this.flipping=false; Utils.safe(body,'#cf-flip').disabled=false; resEl.textContent='Server timeout'; } },6000);
       Network.playCoinflip(side, bet);
@@ -202,6 +220,7 @@
         body.querySelector('#bj-double').disabled=true;
         UI.refreshHUD();
       };
+      optimisticSpend(bet);
       Bus.on('game:result_multi', pending);
       setTimeout(()=>{ if(this.stage==='play'){ Bus.off('game:result_multi', pending); this.stage='bet'; body.querySelector('#bj-deal').disabled=false; const rr=Utils.safe(body,'#bj-result'); rr.textContent='Server timeout'; } },6000);
       Network.playBlackjack(bet, 'deal');

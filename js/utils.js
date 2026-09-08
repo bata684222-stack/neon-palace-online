@@ -127,38 +127,70 @@
     },
     carpetTexture() {
       if (Utils._tex.carpet) return Utils._tex.carpet;
-      const s = 256, c = document.createElement('canvas');
+      const s = 512, c = document.createElement('canvas');
       c.width = c.height = s;
       const g = c.getContext('2d');
-      g.fillStyle = '#5d1730'; g.fillRect(0, 0, s, s);
-      for (let i = 0; i < 2600; i++) {
-        g.fillStyle = `rgba(${150 + Math.random() * 80 | 0},${20 + Math.random() * 40 | 0},${60 + Math.random() * 60 | 0},.5)`;
-        g.fillRect(Math.random() * s, Math.random() * s, 2, 2);
+      // base deep burgundy with gradient
+      const grd=g.createLinearGradient(0,0,s,s);
+      grd.addColorStop(0,'#4a1226'); grd.addColorStop(0.5,'#5d1730'); grd.addColorStop(1,'#3a0f1e');
+      g.fillStyle=grd; g.fillRect(0,0,s,s);
+      // fine weave noise
+      for(let i=0;i<8000;i++){
+        const x=Math.random()*s, y=Math.random()*s;
+        const br=140+Math.random()*70|0, r=br, g2=18+Math.random()*30|0, b=55+Math.random()*50|0;
+        g.fillStyle=`rgba(${r},${g2},${b},.42)`;
+        g.fillRect(x,y,1.5,1.5);
       }
-      g.strokeStyle = 'rgba(255,198,58,.34)'; g.lineWidth = 6;
-      for (let i = 0; i < 4; i++) { g.beginPath(); g.arc(s / 2, s / 2, 26 + i * 34, 0, Math.PI * 2); g.stroke(); }
-      const t = new THREE.CanvasTexture(c);
-      t.wrapS = t.wrapT = THREE.RepeatWrapping;
-      Utils._tex.carpet = t;
-      return t;
+      // gold damask pattern
+      g.strokeStyle='rgba(255,198,58,.32)'; g.lineWidth=7;
+      for(let i=0;i<4;i++){ g.beginPath(); g.arc(s/2,s/2,48+i*56,0,Math.PI*2); g.stroke(); }
+      // diamond lattice
+      g.strokeStyle='rgba(255,220,120,.14)'; g.lineWidth=1.2;
+      for(let x=0;x<s;x+=64){ g.beginPath(); g.moveTo(x,0); g.lineTo(x+s, s); g.stroke(); g.beginPath(); g.moveTo(x+s,0); g.lineTo(x, s); g.stroke(); }
+      // vignette
+      const vg=g.createRadialGradient(s/2,s/2, s*0.3, s/2,s/2, s*0.9);
+      vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,0.22)');
+      g.fillStyle=vg; g.fillRect(0,0,s,s);
+      const t=new THREE.CanvasTexture(c);
+      t.wrapS=t.wrapT=THREE.RepeatWrapping; t.anisotropy=16; t.colorSpace=THREE.SRGBColorSpace;
+      Utils._tex.carpet=t; return t;
     },
     floorTexture() {
       if (Utils._tex.floor) return Utils._tex.floor;
-      const s = 256, c = document.createElement('canvas');
-      c.width = c.height = s;
-      const g = c.getContext('2d');
-      g.fillStyle = '#101420'; g.fillRect(0, 0, s, s);
-      g.fillStyle = '#161c2c'; g.fillRect(0, 0, s / 2, s / 2); g.fillRect(s / 2, s / 2, s / 2, s / 2);
-      g.strokeStyle = 'rgba(0,229,255,.10)'; g.lineWidth = 3;
-      g.strokeRect(0, 0, s, s); g.strokeRect(s / 2, 0, s / 2, s / 2);
-      for (let i = 0; i < 900; i++) {
-        g.fillStyle = `rgba(255,255,255,${Math.random() * .05})`;
-        g.fillRect(Math.random() * s, Math.random() * s, 2, 2);
-      }
-      const t = new THREE.CanvasTexture(c);
-      t.wrapS = t.wrapT = THREE.RepeatWrapping;
-      Utils._tex.floor = t;
-      return t;
+      const s=512, c=document.createElement('canvas');
+      c.width=c.height=s;
+      const g=c.getContext('2d');
+      // polished dark marble
+      g.fillStyle='#0c101c'; g.fillRect(0,0,s,s);
+      // large tiles 256
+      g.fillStyle='#121a2e';
+      g.fillRect(0,0,s/2,s/2); g.fillRect(s/2,s/2,s/2,s/2);
+      // grout + bevel
+      g.strokeStyle='rgba(0,229,255,.13)'; g.lineWidth=2;
+      g.strokeRect(0.5,0.5,s-1,s-1); g.strokeRect(s/2+0.5,0.5,s/2-1,s/2-1); g.strokeRect(0.5,s/2+0.5,s/2-1,s/2-1); g.strokeRect(s/2+0.5,s/2+0.5,s/2-1,s/2-1);
+      // marble veins
+      g.strokeStyle='rgba(120,160,220,.09)'; g.lineWidth=1;
+      for(let i=0;i<18;i++){ g.beginPath(); g.moveTo(Math.random()*s,0); g.bezierCurveTo(Math.random()*s,s*0.33, Math.random()*s,s*0.66, Math.random()*s,s); g.stroke(); }
+      // specular speckles
+      for(let i=0;i<1800;i++){ g.fillStyle=`rgba(255,255,255,${Math.random()*.07})`; g.fillRect(Math.random()*s, Math.random()*s, 1.2,1.2); }
+      // neon edge glow
+      g.strokeStyle='rgba(0,229,255,.07)'; g.lineWidth=6; g.strokeRect(0,0,s,s);
+      const t=new THREE.CanvasTexture(c);
+      t.wrapS=t.wrapT=THREE.RepeatWrapping; t.anisotropy=16; t.colorSpace=THREE.SRGBColorSpace;
+      Utils._tex.floor=t; return t;
+    },
+    // new: high-res wall texture for extra detail
+    wallTexture(){
+      if(Utils._tex.wall) return Utils._tex.wall;
+      const s=512, c=document.createElement('canvas'); c.width=c.height=s;
+      const g=c.getContext('2d');
+      g.fillStyle='#1e2535'; g.fillRect(0,0,s,s);
+      // subtle panels
+      g.fillStyle='rgba(255,255,255,.025)';
+      for(let y=0;y<s;y+=128){ for(let x=0;x<s;x+=256){ g.fillRect(x+2,y+2,252,124); }}
+      g.strokeStyle='rgba(0,229,255,.06)'; g.lineWidth=1; g.strokeRect(0,0,s,s);
+      const t=new THREE.CanvasTexture(c); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.anisotropy=8;
+      Utils._tex.wall=t; return t;
     },
     _tex: {}
   };

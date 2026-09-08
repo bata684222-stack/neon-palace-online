@@ -160,6 +160,12 @@
       if(window.Network && Network.isOnline()){
         this.spinning=true;
         const tier=(cfg && cfg.tier)||'basic';
+        // optimistic spend + shake
+        State.coins=Math.max(0,(State.coins||0)-bet);
+        UI.refreshHUD();
+        const hudEl=document.getElementById('hud-coins');
+        if(hudEl){ hudEl.classList.remove('shake'); void hudEl.offsetWidth; hudEl.classList.add('shake'); setTimeout(()=>hudEl.classList.remove('shake'),500); }
+        Sound.play('bet');
         const resEl=body.querySelector('#sl-result');
         resEl.className='result'; resEl.textContent='SPINNING... (server)';
         body.querySelector('#sl-spin').disabled=true;
@@ -205,14 +211,22 @@
                   const kind=data.kind;
                   const resEl2=Utils.safe(body,'#sl-result');
                   const reels2=Utils.$$('.reel', body);
+                  // sync coins from server if provided
+                  if(data.coins!==undefined){ State.coins=data.coins; State._teamEarnings=data.teamEarnings; }
                   if(payout>0){
                     reels2.forEach(r=>r.classList.add('hit'));
                     resEl2.className='result '+(net>=0?'win':'push');
                     resEl2.textContent=`${kind} · +${Utils.fmt(payout)} монет (x${mult})${data.bonus?` + bonus ${Utils.fmt(data.bonus)}`:''}`;
                     const jackpot=picks[0].id==='seven'&&picks[1].id==='seven'&&picks[2].id==='seven';
+                    // тряска монет
+                    const hud2=document.getElementById('hud-coins');
+                    if(hud2){ hud2.classList.remove('shake','win-pulse'); void hud2.offsetWidth; hud2.classList.add(net>=0?'win-pulse':'shake'); setTimeout(()=>hud2.classList.remove('shake','win-pulse'),600); }
                     if(jackpot||payout>=bet*6){ Sound.play(jackpot?'jackpot':'bigwin'); UI.bigWin(jackpot?'JACKPOT 777!':'BIG WIN!'); if(inter&&inter.node) World.winBurst(inter.node.position.clone().setY(2), Inventory.effectColor(),140); }
                     else { Sound.play('win'); UI.sparks(12, Inventory.effectColor()); }
-                  } else { resEl2.className='result lose'; resEl2.textContent='NO WIN — попробуй ещё'; Sound.play('lose'); }
+                  } else { 
+                    const hud2=document.getElementById('hud-coins');
+                    if(hud2){ hud2.classList.remove('shake'); void hud2.offsetWidth; hud2.classList.add('shake'); setTimeout(()=>hud2.classList.remove('shake'),500); }
+                    resEl2.className='result lose'; resEl2.textContent='NO WIN — попробуй ещё'; Sound.play('lose'); }
                   Utils.safe(body,'#sl-bal').textContent=Utils.fmt(State.coins);
                   Utils.safe(body,'#sl-spin').disabled=false;
                   UI.refreshHUD();

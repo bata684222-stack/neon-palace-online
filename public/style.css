@@ -396,3 +396,6 @@ body.cinematic #hint-bar { opacity: 0 !important; pointer-events: none; }
 #chat-log div { padding:4px 6px; border-radius:6px; background:rgba(255,255,255,.04); }
 #chat-log b { color:var(--accent); }
 #chat-log .sys { color:#8fa2c0; font-style:italic; }
+@keyframes coinShake{ 0%,100%{transform:translateX(0)} 20%{transform:translateX(-4px) rotate(-1deg)} 40%{transform:translateX(4px) rotate(1deg)} 60%{transform:translateX(-3px)} 80%{transform:translateX(3px)} }
+.coins.shake, #hud-coins.shake, #panel-coins.shake{ animation:coinShake .45s ease; color:#ff6b6b !important; }
+.coins.win-pulse, #hud-coins.win-pulse{ animation:coinShake .45s ease; color:#25e39a !important; }
