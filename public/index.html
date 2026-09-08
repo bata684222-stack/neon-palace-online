@@ -30,6 +30,7 @@
         <button class="btn" data-menu="story">STORY / HOW TO PLAY</button>
         <button class="btn" data-menu="quests">QUESTS</button>
         <button class="btn" data-menu="upgrades">UPGRADES</button>
+        <button class="btn" data-menu="skills">SKILLS 3D/HTML/GAMES</button>
         <button class="btn" data-menu="profile">PROFILE</button>
         <button class="btn" data-menu="shop">SHOP</button>
         <button class="btn" data-menu="inventory">INVENTORY</button>
@@ -257,7 +258,7 @@
 /* Sequential module loader: keeps modular js/ files but avoids parallel
    file:// request bursts that some browsers drop (net::ERR_FAILED). */
 (function () {
-  var FILES = ["utils", "save", "audio", "economy", "progression", "quests", "achievements", "inventory", "shop", "dayManager", "cinematicManager", "network", "remotePlayer", "multiplayer", "ui", "upgrades", "world", "floors", "car", "home", "story", "npc", "player", "interaction", "slots", "roulette", "blackjack", "dice", "coinflip", "mpPatch", "main"];
+  var FILES = ["utils", "save", "audio", "economy", "progression", "quests", "achievements", "inventory", "shop", "dayManager", "cinematicManager", "network", "remotePlayer", "multiplayer", "ui", "upgrades", "skills", "world", "floors", "car", "home", "story", "npc", "player", "interaction", "slots", "roulette", "blackjack", "dice", "coinflip", "mpPatch", "main"];
   var i = 0;
   function fail(src, err) {
     var el = document.getElementById('loader-text');
