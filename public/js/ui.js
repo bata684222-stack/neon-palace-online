@@ -948,7 +948,20 @@
       const status=document.getElementById('room-status');
       if(readyBtn){
         const me=room.players && Network.you ? room.players.find(p=>p.id===Network.you.id):null;
-        if(me) { readyBtn.textContent= me.ready ? 'NOT READY' : 'READY ✓'; readyBtn.classList.toggle('gold', !me.ready); }
+        if(me) { 
+          const canStart=room.players && room.players.length===2 && room.players.every(p=>p.ready);
+          if(me.ready){
+            readyBtn.textContent='✓ READY — ОТМЕНИТЬ';
+            readyBtn.classList.remove('gold');
+            readyBtn.style.opacity= canStart ? '0.6' : '1';
+          } else {
+            readyBtn.textContent='READY ✓';
+            readyBtn.classList.add('gold');
+            readyBtn.style.opacity='1';
+          }
+          // прячем кнопку отмены когда уже можно стартовать — чтобы не путать (по желанию можно оставить)
+          // если хочешь полностью скрыть: readyBtn.classList.toggle('hidden', canStart && me.ready);
+        }
       }
       if(startBtn){
         const canStart=room.players && room.players.length===2 && room.players.every(p=>p.ready);
@@ -985,8 +998,9 @@
     addChat(d){
       const log=document.getElementById('chat-log');
       if(!log) return;
+      const wasHidden=log.style.display==='none' || getComputedStyle(log).display==='none';
       log.style.display='flex';
-      document.getElementById('chat-input-row').style.display='none';
+      // не показываем поле ввода автоматически — только по T
       const line=document.createElement('div');
       const isSys=d.id==='system';
       line.className=isSys?'sys':'';
@@ -996,9 +1010,22 @@
       log.appendChild(line);
       log.scrollTop=log.scrollHeight;
       setTimeout(()=>{ if(log.children.length>50) log.removeChild(log.firstChild); },0);
-      // show input row when focused
-      const inputRow=document.getElementById('chat-input-row');
-      if(document.activeElement && document.activeElement.id==='chat-input') { inputRow.style.display='flex'; log.style.display='flex'; }
+      // автоскрытие через 7 сек если чат не открыт вручную и не в фокусе
+      clearTimeout(this._chatHideTimer);
+      const input=document.getElementById('chat-input');
+      const isInputFocused=document.activeElement===input;
+      if(!isInputFocused){
+        this._chatHideTimer=setTimeout(()=>{
+          const row=document.getElementById('chat-input-row');
+          const log2=document.getElementById('chat-log');
+          if(document.activeElement!==input) {
+            // не скрываем если мышь над чатом
+            if(log2 && !log2.matches(':hover') && (!row || !row.matches(':hover'))){
+              log2.style.display='none';
+            }
+          }
+        }, 7000);
+      }
     },
     toggleChat(show){
       const log=document.getElementById('chat-log');

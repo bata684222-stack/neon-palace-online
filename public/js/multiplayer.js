@@ -166,8 +166,9 @@
       // add XP locally? Server already added xp to room player. Keep progression via server.
     },
     onGameStart(room){
-      // hide lobby, start morning
+      // hide lobby/room, start morning
       UI.hideLobby();
+      UI.hideRoom();
       UI.showHUD(true);
       // teleport both to home
       Game.setState('HOME');
