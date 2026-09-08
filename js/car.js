@@ -266,12 +266,17 @@
       if (d && this.car) {
         d.t = Math.min(d.dur, d.t + dt);
         const k = d.t / d.dur;
-        const e = k < .12 ? Tween.easeOutCubic(k / .12) * .12 : k > .88 ? .88 + (1 - Math.pow(1 - (k - .88) / .12, 2)) * .12 : k;
+        // улучшенная плавная кривая — без рывков в начале/конце
+        const e = k < .12 ? Tween.easeOutCubic(k / .12) * .12 : k > .88 ? .88 + (1 - Math.pow(1 - (k - .88) / .12, 3)) * .12 : k;
         this.car.group.position.z = Utils.lerp(d.from, d.to, e);
-        this.car.group.position.x = Math.sin(k * 9) * .25;
+        // легкое покачивание только на высокой скорости, иначе прямо
+        const wobble = k>0.15 && k<0.85 ? Math.sin(k * Math.PI * 4) * 0.08 : 0;
+        this.car.group.position.x = wobble;
+        // небольшой крен в повороте
+        this.car.group.rotation.z = wobble * 0.12;
         this._wheelSpin += dt * 26;
         this.car.wheels.forEach(w => w.rotation.x = this._wheelSpin);
-        if (d.t >= d.dur) { const cb = d.onDone; this.driving = null; if (cb) cb(); }
+        if (d.t >= d.dur) { const cb = d.onDone; this.driving = null; this.car.group.rotation.z=0; if (cb) cb(); }
       }
       /* idle wheels shimmer for the parked car at home */
       if (window.Home && Home.car && Home.car.lightsOn) {

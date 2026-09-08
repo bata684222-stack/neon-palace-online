@@ -42,6 +42,7 @@
         history: []             // [{day, quota, earnings, tickets}]
       },
       items: { owned: [] },     // campaign items bought with Tickets
+      upgrades: { bet_boost:0, luck_boost:0, payout_boost:0 },
       stats: {
         gamesPlayed: 0, wins: 0, losses: 0, pushes: 0,
         bestWin: 0, totalWager: 0, totalWon: 0, spins: 0,
@@ -113,6 +114,8 @@
     /* only known item ids may exist in the save */
     const ITEM_IDS = ['lucky_charm', 'coin_magnet', 'lucky_dice', 'safety_card', 'vip_pass'];
     d.items.owned = arr(d.items.owned).filter((v, i, a) => ITEM_IDS.indexOf(v) >= 0 && a.indexOf(v) === i);
+    if(!d.upgrades) d.upgrades={ bet_boost:0, luck_boost:0, payout_boost:0 };
+    ['bet_boost','luck_boost','payout_boost'].forEach(k=> d.upgrades[k]=Math.floor(num(d.upgrades[k],0,3,0)));
     d.inventory.owned = arr(d.inventory.owned);
     d.achievements = arr(d.achievements);
     d.unlockedAreas = arr(d.unlockedAreas);

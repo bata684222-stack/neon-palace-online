@@ -18,6 +18,7 @@ class Room {
     this.floor=1;
     this.floors=[1];
     this.teamEarnings=0;
+    this.sharedCoins=8000; // общие деньги для обеих игроков (new)
     this.dayStartCoins={}; // playerId -> coins at day start
     this.counters={games:0, wins:0};
     this.history=[];
@@ -72,9 +73,10 @@ class Room {
       floor: this.floor,
       floors: this.floors.slice(),
       teamEarnings: this.teamEarnings,
+      sharedCoins: this.sharedCoins,
       bossReady: this.bossReady,
       players: this.players.map(p=>({
-        id:p.id, name:p.name, ready:!!p.ready, coins:p.coins, tickets:p.tickets,
+        id:p.id, name:p.name, ready:!!p.ready, coins:this.sharedCoins, tickets:p.tickets,
         level:p.level, xp:p.xp, items: p.items? p.items.slice():[],
         pos: p.pos, yaw:p.yaw, pitch:p.pitch, state:p.state||'idle',
         dayEarnings: p.dayEarnings||0
@@ -92,13 +94,14 @@ class Room {
     this.floor=1;
     this.floors=[1];
     this.teamEarnings=0;
+    this.sharedCoins=Math.max(this.sharedCoins||8000, Validation.DAYS[0].bank);
     this.bossReady=false;
     this.prevEarnings=0;
     this.prevQuota=0;
     for(const p of this.players){
       p.dayEarnings=0;
-      p.coins = Math.max(p.coins, Validation.DAYS[0].bank);
-      this.dayStartCoins[p.id]=p.coins;
+      p.coins=this.sharedCoins;
+      this.dayStartCoins[p.id]=this.sharedCoins;
     }
     this.startClock();
   }
@@ -108,13 +111,14 @@ class Room {
     this.time=0;
     this.teamEarnings=0;
     this.bossReady=false;
+    const d=Validation.DAYS[this.day-1];
+    if(this.sharedCoins < d.bank){
+      this.sharedCoins = d.bank;
+    }
     for(const p of this.players){
       p.dayEarnings=0;
-      const d=Validation.DAYS[this.day-1];
-      if(p.coins < d.bank){
-        p.coins = d.bank;
-      }
-      this.dayStartCoins[p.id]=p.coins;
+      p.coins=this.sharedCoins;
+      this.dayStartCoins[p.id]=this.sharedCoins;
     }
   }
 

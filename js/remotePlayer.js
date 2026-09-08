@@ -129,8 +129,9 @@
       this.visible=true;
       this.group.visible=true;
       if(pos){
-        this.group.position.set(pos.x,0,pos.z);
-        this.targetPos.set(pos.x,pos.y||1.7,pos.z);
+        const yGround=(pos.y||1.7)-1.7;
+        this.group.position.set(pos.x,yGround,pos.z);
+        this.targetPos.set(pos.x,yGround,pos.z);
         this.prevPos.copy(this.targetPos);
       }
     },
@@ -142,14 +143,12 @@
 
     // called on network move
     onMove(data){
-      // data: {id, pos, yaw, pitch, state}
       if(!this.visible) return;
       if(data.id!==this.id) return;
       this.prevPos.copy(this.group.position);
-      // we store targetPos as THREE.Vector3 with y from pos.y
-      this.targetPos.set(data.pos.x, data.pos.y||1.7, data.pos.z);
+      const yGround = (data.pos.y||1.7) - 1.7;
+      this.targetPos.set(data.pos.x, yGround, data.pos.z);
       this.prevYaw=this.group.rotation.y;
-      // normalize yaw diff
       let diff=data.yaw - this.prevYaw;
       while(diff>Math.PI) diff-=Math.PI*2;
       while(diff<-Math.PI) diff+=Math.PI*2;
@@ -161,31 +160,36 @@
 
     update(dt){
       if(!this.visible) return;
-      // interpolate 0..1 over ~100ms (lerp speed 10)
       this.lerpT=Math.min(1, this.lerpT + dt*10);
       const k= this.lerpT<1 ? (1-Math.pow(1-this.lerpT,3)) : 1;
-      this.group.position.lerpVectors(this.prevPos, this.targetPos, k);
+      const baseX = this.prevPos.x + (this.targetPos.x - this.prevPos.x)*k;
+      const baseZ = this.prevPos.z + (this.targetPos.z - this.prevPos.z)*k;
+      const baseY = this.prevPos.y + (this.targetPos.y - this.prevPos.y)*k;
       // yaw lerp
-      let cur=this.group.rotation.y;
       const yawDiff=this.targetYaw - this.prevYaw;
       this.group.rotation.y = this.prevYaw + yawDiff * k;
-      // simple bob when moving
-      this.animPhase += dt * (this.state==='run'?13 : this.state==='walk'?9 : 1.5);
+      this.group.position.x = baseX;
+      this.group.position.z = baseZ;
+      // anim bob + jump
+      this.animPhase += dt * (this.state==='run'?13 : this.state==='walk'?9 : this.state==='jump'?14 : 1.5);
       const moving=this.state==='walk'||this.state==='run';
+      const jumping=this.state==='jump';
+      let bob=0;
       if(moving){
-        const bob=Math.sin(this.animPhase)*0.05;
-        this.group.position.y=bob;
+        bob=Math.sin(this.animPhase)*0.05;
         this.legs[0].position.y=0.45 + Math.sin(this.animPhase)*0.08;
         this.legs[1].position.y=0.45 - Math.sin(this.animPhase)*0.08;
         this.arms[0].rotation.x=Math.sin(this.animPhase)*0.4;
         this.arms[1].rotation.x=-Math.sin(this.animPhase)*0.4;
+      } else if(jumping){
+        bob=Math.sin(this.animPhase)*0.12;
+        this.legs[0].position.y=0.45; this.legs[1].position.y=0.45;
+        this.arms[0].rotation.x=-0.6; this.arms[1].rotation.x=-0.6;
       } else {
-        this.group.position.y=0;
         this.legs[0].position.y=0.45; this.legs[1].position.y=0.45;
         this.arms[0].rotation.x=0; this.arms[1].rotation.x=0;
       }
-      // face dir arrow
-      // keep name sprite facing camera: sprite does automatically
+      this.group.position.y = baseY + bob;
     },
 
     getPos(){ return this.group.position.clone(); }

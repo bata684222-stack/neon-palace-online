@@ -29,6 +29,7 @@
         <button class="btn gold" id="btn-multiplayer">🌐 MULTIPLAYER — 2 PLAYERS</button>
         <button class="btn" data-menu="story">STORY / HOW TO PLAY</button>
         <button class="btn" data-menu="quests">QUESTS</button>
+        <button class="btn" data-menu="upgrades">UPGRADES</button>
         <button class="btn" data-menu="profile">PROFILE</button>
         <button class="btn" data-menu="shop">SHOP</button>
         <button class="btn" data-menu="inventory">INVENTORY</button>
@@ -248,6 +249,7 @@
   </div>
   <div id="flash"></div>
   <div id="sparks"></div>
+  <div id="bloom" style="position:fixed; inset:0; pointer-events:none; background:radial-gradient(ellipse at 50% 18%, rgba(0,229,255,0.06), transparent 55%), radial-gradient(ellipse at 20% 80%, rgba(255,45,149,0.04), transparent 50%), radial-gradient(ellipse at 80% 90%, rgba(255,198,58,0.04), transparent 50%); filter:blur(1px); mix-blend-mode:screen; opacity:0.9"></div>
 </div>
 
 <script src="vendor/three.min.js"></script>
@@ -255,7 +257,7 @@
 /* Sequential module loader: keeps modular js/ files but avoids parallel
    file:// request bursts that some browsers drop (net::ERR_FAILED). */
 (function () {
-  var FILES = ["utils", "save", "audio", "economy", "progression", "quests", "achievements", "inventory", "shop", "dayManager", "cinematicManager", "network", "remotePlayer", "multiplayer", "ui", "world", "floors", "car", "home", "story", "npc", "player", "interaction", "slots", "roulette", "blackjack", "dice", "coinflip", "mpPatch", "main"];
+  var FILES = ["utils", "save", "audio", "economy", "progression", "quests", "achievements", "inventory", "shop", "dayManager", "cinematicManager", "network", "remotePlayer", "multiplayer", "ui", "upgrades", "world", "floors", "car", "home", "story", "npc", "player", "interaction", "slots", "roulette", "blackjack", "dice", "coinflip", "mpPatch", "main"];
   var i = 0;
   function fail(src, err) {
     var el = document.getElementById('loader-text');
