@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>NEON PALACE — 3D Casino Simulator</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div id="app">
+  <canvas id="scene"></canvas>
+
+  <!-- ============ LOADING ============ -->
+  <div id="loading" class="screen">
+    <div class="logo">NEON<span>PALACE</span></div>
+    <div class="loader-bar"><div id="loader-fill"></div></div>
+    <div id="loader-text">Building casino...</div>
+  </div>
+
+  <!-- ============ MAIN MENU ============ -->
+  <div id="main-menu" class="screen hidden">
+    <div class="menu-bg-grid"></div>
+    <div class="menu-inner">
+      <div class="logo big">NEON<span>PALACE</span></div>
+      <div class="tagline">3D CASINO SIMULATOR &middot; VIRTUAL COINS ONLY &middot; 2-PLAYER ONLINE</div>
+      <div class="menu-buttons">
+        <button class="btn primary" data-menu="play">SOLO — NEW CAMPAIGN</button>
+        <button class="btn" data-menu="continue">CONTINUE SOLO</button>
+        <button class="btn gold" id="btn-multiplayer">🌐 MULTIPLAYER — 2 PLAYERS</button>
+        <button class="btn" data-menu="story">STORY / HOW TO PLAY</button>
+        <button class="btn" data-menu="quests">QUESTS</button>
+        <button class="btn" data-menu="profile">PROFILE</button>
+        <button class="btn" data-menu="shop">SHOP</button>
+        <button class="btn" data-menu="inventory">INVENTORY</button>
+        <button class="btn" data-menu="achievements">ACHIEVEMENTS</button>
+        <button class="btn" data-menu="settings">SETTINGS</button>
+      </div>
+      <div class="menu-foot">
+        <span id="menu-save-info">No save data</span>
+        <span class="disclaimer">Все монеты — виртуальная игровая валюта. Никаких реальных денег.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ MULTIPLAYER LOBBY ============ -->
+  <div id="mp-lobby" class="screen dim hidden">
+    <div class="menu-inner" style="max-width:640px">
+      <div class="logo" style="font-size:32px">NEON<span>PALACE</span> <span style="font-size:18px; color:var(--gold)">ONLINE</span></div>
+      <div class="tagline">2 PLAYERS · ONE WORLD · SHARED QUOTA</div>
+      <div style="display:flex; gap:10px; margin:18px 0">
+        <input id="mp-name" placeholder="Твоё имя (Player)" maxlength="16" style="flex:1; padding:12px 14px; border-radius:10px; border:1px solid var(--line); background:rgba(255,255,255,.06); color:#fff; font-family:inherit; font-size:15px; letter-spacing:1px">
+      </div>
+      <div class="menu-buttons">
+        <button class="btn primary" id="mp-create">CREATE ROOM</button>
+        <button class="btn gold" id="mp-quick">QUICK PLAY</button>
+        <div style="display:flex; gap:10px">
+          <input id="mp-code" placeholder="ROOM CODE (A7K9X2)" maxlength="6" style="flex:1; padding:12px 14px; border-radius:10px; border:1px solid var(--line); background:rgba(255,255,255,.06); color:#fff; font-family:inherit; font-size:15px; letter-spacing:3px; text-transform:uppercase; text-align:center">
+          <button class="btn" id="mp-join">JOIN</button>
+        </div>
+        <button class="btn" id="mp-lobby-back">← BACK TO MENU</button>
+      </div>
+      <div id="mp-lobby-status" class="muted" style="margin-top:14px; text-align:center">CONNECTING TO SERVER...</div>
+    </div>
+  </div>
+
+  <!-- ============ ROOM ============ -->
+  <div id="mp-room" class="screen dim hidden">
+    <div class="menu-inner" style="max-width:640px">
+      <div class="logo" style="font-size:28px">ROOM <span id="room-code" style="color:var(--gold); letter-spacing:6px">------</span></div>
+      <div style="display:flex; gap:10px; justify-content:center; margin:10px 0">
+        <button class="btn sm" id="room-copy">COPY CODE</button>
+        <span id="room-count" class="tag gold">1 / 2 PLAYERS</span>
+      </div>
+      <div id="room-players" style="display:grid; gap:10px; margin:16px 0"></div>
+      <div class="menu-buttons">
+        <button class="btn" id="room-ready">READY ✓</button>
+        <button class="btn primary hidden" id="room-start">START GAME</button>
+        <button class="btn danger" id="room-leave">LEAVE ROOM</button>
+      </div>
+      <div id="room-status" class="muted" style="margin-top:12px; text-align:center">Ожидание второго игрока...</div>
+    </div>
+  </div>
+
+  <!-- ============ CONNECT OVERLAY ============ -->
+  <div id="mp-connect" class="hidden" style="position:fixed; inset:0; z-index:95; display:grid; place-items:center; background:rgba(3,5,12,.85); backdrop-filter:blur(6px)">
+    <div class="confirm-box" style="border-color:var(--accent)">
+      <h3 class="mp-connect-text">CONNECTING TO SERVER...</h3>
+      <p class="muted">Проверь интернет или запусти <code>npm start</code> локально</p>
+      <div class="confirm-actions" style="margin-top:14px">
+        <button class="btn gold" id="mp-reconnect">RECONNECT</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ HUD ============ -->
+  <div id="hud" class="hidden">
+    <div class="hud-corner tl">
+      <div class="hud-card">
+        <div class="hud-avatar" id="hud-avatar">🎩</div>
+        <div class="hud-stats">
+          <div class="hud-row"><span class="k">COINS</span><span class="v coins" id="hud-coins">10,000</span></div>
+          <div class="hud-row"><span class="k">TICKETS</span><span class="v tickets" id="hud-tickets">0</span></div>
+          <div class="hud-row"><span class="k">LEVEL</span><span class="v" id="hud-level">1</span></div>
+          <div class="xp-wrap"><div class="xp-fill" id="hud-xp-fill"></div><div class="xp-text" id="hud-xp-text">0 / 400 XP</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="hud-corner tr">
+      <div id="zone-name">LOBBY</div>
+      <div id="fps-counter">-- FPS</div>
+    </div>
+    <!-- campaign panel: day, quota, clock -->
+    <div id="campaign-hud">
+      <div class="ch-row">
+        <div class="ch-day">DAY <b id="ch-day">1</b> / 6</div>
+        <div class="ch-clock">🕐 <b id="ch-time">08:00</b></div>
+      </div>
+      <div class="ch-quota">
+        <span class="ch-label" id="ch-label">QUOTA</span>
+        <span class="ch-vals"><b id="ch-earn">0</b> / <span id="ch-quota">5,000</span></span>
+      </div>
+      <div class="ch-bar"><i id="ch-fill"></i></div>
+      <div class="ch-foot"><span id="ch-floor">FLOOR 1</span><span id="ch-status">Заработай квоту до 22:00</span></div>
+      <div id="mp-hud" class="hidden" style="margin-top:8px; padding:8px; background:rgba(0,229,255,.08); border:1px solid var(--line); border-radius:8px; font-size:11px">
+        <div id="mp-hud-players" style="display:flex; gap:8px; justify-content:space-between"></div>
+        <div id="mp-hud-team" style="margin-top:4px; color:var(--gold); font-weight:700; letter-spacing:1px"></div>
+      </div>
+    </div>
+
+    <!-- Chat -->
+    <div id="chat" style="position:absolute; left:14px; bottom:70px; width:340px; max-height:220px; display:flex; flex-direction:column; gap:6px; pointer-events:auto">
+      <div id="chat-log" style="max-height:160px; overflow-y:auto; display:flex; flex-direction:column; gap:4px; padding:6px; background:rgba(8,10,18,.72); border:1px solid var(--line); border-radius:10px; backdrop-filter:blur(6px); font-size:12px; display:none"></div>
+      <div style="display:flex; gap:6px; display:none" id="chat-input-row">
+        <input id="chat-input" placeholder="Напиши сообщение... (Enter)" maxlength="120" style="flex:1; padding:8px 10px; border-radius:8px; border:1px solid var(--line); background:rgba(255,255,255,.06); color:#fff; font-family:inherit; font-size:12px">
+        <button class="btn sm" id="chat-send">SEND</button>
+      </div>
+      <div id="chat-hint" style="color:rgba(200,220,240,.45); font-size:11px; letter-spacing:1px">[T] чат · [Enter] отправить</div>
+    </div>
+
+    <div id="crosshair"><i></i></div>
+    <div id="prompt" class="hidden"><b>[E]</b><span id="prompt-text">INTERACT</span></div>
+    <div id="lock-hint">Кликни, чтобы захватить курсор</div>
+    <div id="hud-keys">WASD движение &middot; SHIFT бег &middot; SPACE прыжок &middot; E действие &middot; J квесты &middot; P профиль &middot; I инвентарь &middot; M карта дня &middot; ESC пауза</div>
+    <div id="toasts"></div>
+  </div>
+
+  <!-- ============ PAUSE ============ -->
+  <div id="pause-menu" class="screen dim hidden">
+    <div class="menu-inner narrow">
+      <h1 class="panel-title">PAUSED</h1>
+      <div class="menu-buttons">
+        <button class="btn primary" data-pause="resume">RESUME</button>
+        <button class="btn" data-pause="settings">SETTINGS</button>
+        <button class="btn" data-pause="controls">CONTROLS</button>
+        <button class="btn" data-pause="save">SAVE</button>
+        <button class="btn danger" data-pause="menu">MAIN MENU</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ PANEL OVERLAY ============ -->
+  <div id="overlay" class="hidden">
+    <div id="panel" class="panel">
+      <div class="panel-head">
+        <h2 id="panel-title">PANEL</h2>
+        <div class="panel-head-right">
+          <div class="panel-coins">💰 <span id="panel-coins">0</span></div>
+          <button id="panel-close" class="x-btn" title="Close (ESC)">EXIT ✕</button>
+        </div>
+      </div>
+      <div id="panel-body" class="panel-body"></div>
+    </div>
+  </div>
+
+  <!-- ============ CONFIRM ============ -->
+  <div id="confirm" class="hidden">
+    <div class="confirm-box">
+      <h3 id="confirm-title">Are you sure?</h3>
+      <p id="confirm-text"></p>
+      <div class="confirm-actions">
+        <button class="btn" id="confirm-no">CANCEL</button>
+        <button class="btn danger" id="confirm-yes">CONFIRM</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ CINEMATIC LAYER ============ -->
+  <div id="cine" class="hidden">
+    <div class="cine-bar top"></div>
+    <div class="cine-bar bottom"></div>
+    <div id="subtitle"></div>
+    <div id="cine-skip">SPACE — пропустить сцену</div>
+  </div>
+  <div id="cine-title" class="hidden"><h1 id="ct-main"></h1><p id="ct-sub"></p></div>
+  <div id="fade"></div>
+
+  <!-- ============ STORY SCREENS ============ -->
+  <div id="day-intro" class="screen dim hidden">
+    <div class="story-box">
+      <div class="story-day" id="di-day">DAY 1 / 6</div>
+      <div class="story-quota"><span>QUOTA</span><b id="di-quota">5,000</b></div>
+      <div class="story-time">TIME <b id="di-time">08:00</b> — 22:00</div>
+      <p class="story-text" id="di-text"></p>
+      <button class="btn primary" id="di-go">НАЧАТЬ ДЕНЬ</button>
+    </div>
+  </div>
+
+  <div id="day-complete" class="screen dim hidden">
+    <div class="story-box win">
+      <div class="story-day" id="dc-title">DAY 1 COMPLETE</div>
+      <div class="story-rewards" id="dc-rewards"></div>
+      <p class="story-text" id="dc-text"></p>
+      <button class="btn primary" id="dc-go">ЕХАТЬ ДОМОЙ</button>
+    </div>
+  </div>
+
+  <div id="game-over" class="screen dim hidden">
+    <div class="story-box fail">
+      <div class="story-day">QUOTA FAILED</div>
+      <div class="story-quota"><span id="go-day">DAY 1</span><b id="go-nums">0 / 5,000</b></div>
+      <div class="story-gameover">GAME OVER</div>
+      <p class="story-text" id="go-text"></p>
+      <div class="menu-buttons">
+        <button class="btn primary" id="go-retry">RETRY DAY</button>
+        <button class="btn" id="go-menu">MAIN MENU</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="victory" class="screen dim hidden">
+    <div class="story-box gold">
+      <div class="story-day">6 DAYS COMPLETE</div>
+      <div class="story-gameover">QUOTA PAID</div>
+      <div class="story-complete">GAME COMPLETE</div>
+      <div class="story-end">THE END</div>
+      <div class="story-rewards" id="vc-stats"></div>
+      <div class="menu-buttons">
+        <button class="btn primary" id="vc-menu">MAIN MENU</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ FX LAYERS ============ -->
+  <div id="levelup-fx" class="hidden">
+    <div class="lu-ring"></div>
+    <div class="lu-text">LEVEL UP!</div>
+    <div class="lu-sub" id="lu-sub">LEVEL 2</div>
+  </div>
+  <div id="flash"></div>
+  <div id="sparks"></div>
+</div>
+
+<script src="vendor/three.min.js"></script>
+<script>
+/* Sequential module loader: keeps modular js/ files but avoids parallel
+   file:// request bursts that some browsers drop (net::ERR_FAILED). */
+(function () {
+  var FILES = ["utils", "save", "audio", "economy", "progression", "quests", "achievements", "inventory", "shop", "dayManager", "cinematicManager", "network", "remotePlayer", "multiplayer", "ui", "world", "floors", "car", "home", "story", "npc", "player", "interaction", "slots", "roulette", "blackjack", "dice", "coinflip", "mpPatch", "main"];
+  var i = 0;
+  function fail(src, err) {
+    var el = document.getElementById('loader-text');
+    if (el) el.textContent = 'Load error: ' + src;
+    console.error('[Loader] failed', src, err || '');
+  }
+  function next() {
+    if (i >= FILES.length) return;
+    var src = 'js/' + FILES[i] + '.js';
+    var tries = 0;
+    (function attempt() {
+      var s = document.createElement('script');
+      s.src = src + (tries ? '?r=' + tries : '');
+      s.async = false;
+      s.onload = function () { i++; next(); };
+      s.onerror = function (e) {
+        s.parentNode && s.parentNode.removeChild(s);
+        if (++tries <= 5) setTimeout(attempt, 60 * tries);
+        else fail(src, e);
+      };
+      document.head.appendChild(s);
+    })();
+  }
+  next();
+})();
+</script>
+</body>
+</html>
